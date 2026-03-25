@@ -8,96 +8,111 @@
   <style>
     :root {
       --bg: #0f172a;
-      --bg-2: #111827;
-      --card: rgba(255, 255, 255, 0.08);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --text: #ffffff;
+      --bg2: #111827;
+      --card: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.08);
+      --text: #fff;
       --muted: #94a3b8;
       --blue: #3b82f6;
       --green: #22c55e;
       --red: #ef4444;
-      --yellow: #f59e0b;
-      --shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
-      --radius: 20px;
     }
 
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
       font-family: Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: linear-gradient(180deg, var(--bg), var(--bg-2));
+      background: linear-gradient(180deg, var(--bg), var(--bg2));
       color: var(--text);
       min-height: 100vh;
-      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     }
 
     .app {
-      width: 100%;
       max-width: 520px;
       margin: 0 auto;
       min-height: 100vh;
-      padding: 18px 14px 90px;
+      padding: 16px 14px 95px;
+    }
+
+    .page {
+      display: none;
+      animation: fade 0.2s ease;
+    }
+
+    .page.active {
+      display: block;
     }
 
     .header {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .brand h1 {
       font-size: 28px;
-      line-height: 1.1;
       font-weight: 800;
     }
 
     .brand p {
       color: var(--muted);
       font-size: 13px;
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     .live-badge {
-      background: rgba(34, 197, 94, 0.15);
+      background: rgba(34,197,94,0.15);
       color: #86efac;
-      border: 1px solid rgba(34, 197, 94, 0.28);
+      border: 1px solid rgba(34,197,94,0.2);
       padding: 8px 12px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
-      white-space: nowrap;
     }
 
-    .welcome-card,
-    .search-section,
-    .section,
-    .market-card {
+    .section {
       background: var(--card);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
     }
 
     .welcome-card {
-      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
       margin-bottom: 14px;
     }
 
     .welcome-title {
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 6px;
     }
 
@@ -107,127 +122,89 @@
       line-height: 1.5;
     }
 
-    .search-section {
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-
     .search-row {
       display: flex;
       gap: 10px;
       margin-bottom: 12px;
     }
 
-    .search-row input {
+    input {
       flex: 1;
       height: 48px;
       border: none;
       outline: none;
       border-radius: 14px;
       padding: 0 14px;
-      font-size: 16px;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.12);
       color: white;
+      font-size: 16px;
     }
 
-    .search-row input::placeholder {
+    input::placeholder {
       color: #b8c4d6;
     }
 
-    .btn {
+    button {
       border: none;
-      outline: none;
       cursor: pointer;
-      border-radius: 14px;
-      transition: 0.2s ease;
-      font-weight: 700;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
     }
 
     .btn-add {
       width: 88px;
+      border-radius: 14px;
       background: var(--blue);
       color: white;
-      font-size: 15px;
+      font-weight: 700;
     }
 
-    .quick-coins {
+    .chips {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding-bottom: 2px;
       scrollbar-width: none;
     }
 
-    .quick-coins::-webkit-scrollbar {
+    .chips::-webkit-scrollbar {
       display: none;
     }
 
     .chip {
-      border: none;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       color: white;
       padding: 10px 14px;
       border-radius: 999px;
-      cursor: pointer;
       white-space: nowrap;
       font-size: 13px;
-      transition: 0.2s ease;
-    }
-
-    .chip:active {
-      transform: scale(0.97);
-    }
-
-    .section {
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .section-title {
-      font-size: 17px;
-      font-weight: 800;
-    }
-
-    .section-sub {
-      color: var(--muted);
-      font-size: 12px;
     }
 
     .status {
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    .watchlist {
+    .watchlist,
+    .market-list,
+    .alerts-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    .coin-card {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .coin-card,
+    .mini-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 18px;
       padding: 14px;
     }
 
-    .coin-top {
+    .coin-top,
+    .mini-top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
     }
 
@@ -235,7 +212,6 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 0;
     }
 
     .coin-icon {
@@ -245,11 +221,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(59, 130, 246, 0.18);
-      font-weight: 800;
-      font-size: 14px;
+      background: rgba(59,130,246,0.18);
       color: #93c5fd;
-      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .coin-info h3 {
@@ -257,36 +232,23 @@
       font-weight: 800;
     }
 
-    .coin-info p {
+    .coin-info p,
+    .small {
       color: var(--muted);
       font-size: 12px;
       margin-top: 3px;
     }
 
-    .remove-btn {
-      border: none;
-      background: rgba(239, 68, 68, 0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239, 68, 68, 0.22);
-      padding: 8px 10px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
     .coin-bottom {
       display: flex;
-      align-items: flex-end;
       justify-content: space-between;
+      align-items: flex-end;
       gap: 10px;
     }
 
     .price {
       font-size: 28px;
       font-weight: 800;
-      letter-spacing: -0.5px;
     }
 
     .change {
@@ -297,13 +259,23 @@
     }
 
     .up {
+      background: rgba(34,197,94,0.14);
       color: #86efac;
-      background: rgba(34, 197, 94, 0.14);
     }
 
     .down {
+      background: rgba(239,68,68,0.14);
       color: #fca5a5;
-      background: rgba(239, 68, 68, 0.14);
+    }
+
+    .remove-btn {
+      background: rgba(239,68,68,0.14);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.2);
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .grid-two {
@@ -312,61 +284,30 @@
       gap: 12px;
     }
 
-    .market-card {
+    .metric-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 18px;
       padding: 14px;
     }
 
-    .market-card .small {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .market-card .big {
+    .metric-big {
       font-size: 20px;
       font-weight: 800;
+      margin-top: 8px;
     }
 
-    .market-card .mini {
-      margin-top: 6px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .action-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: white;
-      padding: 14px 12px;
-      border-radius: 16px;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .action-btn strong {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 4px;
-    }
-
-    .action-btn span {
-      color: var(--muted);
-      font-size: 12px;
+    .profile-box p {
+      margin-bottom: 10px;
+      color: #dbe4ef;
+      font-size: 14px;
     }
 
     .empty {
       text-align: center;
-      padding: 18px;
       color: var(--muted);
-      background: rgba(255, 255, 255, 0.04);
+      padding: 18px;
+      background: rgba(255,255,255,0.04);
       border-radius: 16px;
-      font-size: 14px;
     }
 
     .bottom-nav {
@@ -376,8 +317,8 @@
       bottom: 10px;
       width: calc(100% - 20px);
       max-width: 500px;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15,23,42,0.88);
+      border: 1px solid rgba(255,255,255,0.08);
       backdrop-filter: blur(14px);
       border-radius: 22px;
       padding: 10px;
@@ -388,331 +329,302 @@
     }
 
     .nav-btn {
-      border: none;
       background: transparent;
       color: white;
       border-radius: 16px;
       padding: 10px 6px;
       font-size: 12px;
-      cursor: pointer;
     }
 
     .nav-btn.active {
-      background: rgba(59, 130, 246, 0.18);
+      background: rgba(59,130,246,0.18);
       color: #93c5fd;
       font-weight: 700;
     }
 
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 380px) {
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
       .brand h1 {
         font-size: 24px;
       }
-
       .price {
         font-size: 24px;
-      }
-
-      .grid-two,
-      .actions {
-        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <header class="header">
-      <div class="header-top">
-        <div class="brand">
-          <h1>Price Checker</h1>
-          <p>Mini app home for live crypto tracking</p>
+    <!-- HOME -->
+    <section class="page active" id="homePage">
+      <header class="header">
+        <div class="header-top">
+          <div class="brand">
+            <h1>Price Checker</h1>
+            <p>Telegram Mini App home</p>
+          </div>
+          <div class="live-badge">LIVE</div>
         </div>
-        <div class="live-badge">LIVE</div>
-      </div>
 
-      <div class="welcome-card">
-        <div class="welcome-title" id="welcomeTitle">Welcome 👋</div>
-        <div class="welcome-sub">
-          Track coins fast, save your watchlist, and later we’ll connect marketplace features here.
+        <div class="welcome-card">
+          <div class="welcome-title" id="welcomeTitle">Welcome 👋</div>
+          <div class="welcome-sub">
+            Track live prices fast and manage your watchlist.
+          </div>
+        </div>
+      </header>
+
+      <div class="section">
+        <div class="section-title">Search</div>
+        <div class="section-sub">Add coin by symbol</div>
+
+        <div class="search-row">
+          <input type="text" id="coinInput" placeholder="Enter coin, e.g. BTC" />
+          <button class="btn-add" id="addBtn">Add</button>
+        </div>
+
+        <div class="chips">
+          <button class="chip" data-symbol="BTC">BTC</button>
+          <button class="chip" data-symbol="ETH">ETH</button>
+          <button class="chip" data-symbol="SOL">SOL</button>
+          <button class="chip" data-symbol="BNB">BNB</button>
+          <button class="chip" data-symbol="XRP">XRP</button>
+          <button class="chip" data-symbol="DOGE">DOGE</button>
         </div>
       </div>
-    </header>
 
-    <section class="search-section">
-      <div class="search-row">
-        <input type="text" id="coinInput" placeholder="Enter symbol, e.g. BTC" />
-        <button class="btn btn-add" id="addBtn">Add</button>
+      <div class="section">
+        <div class="section-title">Overview</div>
+        <div class="section-sub">Mini app stats</div>
+
+        <div class="grid-two">
+          <div class="metric-card">
+            <div class="small">Tracked Coins</div>
+            <div class="metric-big" id="trackedCount">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="small">Last Update</div>
+            <div class="metric-big" id="lastUpdate">--:--</div>
+          </div>
+        </div>
       </div>
 
-      <div class="quick-coins">
-        <button class="chip" data-symbol="BTC">BTC</button>
-        <button class="chip" data-symbol="ETH">ETH</button>
-        <button class="chip" data-symbol="SOL">SOL</button>
-        <button class="chip" data-symbol="BNB">BNB</button>
-        <button class="chip" data-symbol="XRP">XRP</button>
-        <button class="chip" data-symbol="DOGE">DOGE</button>
+      <div class="section">
+        <div class="section-title">Watchlist</div>
+        <div class="section-sub">Your saved coins</div>
+        <div class="status" id="status">Loading prices...</div>
+        <div class="watchlist" id="watchlist"></div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <div class="section-title">Market Overview</div>
-          <div class="section-sub">Quick home info</div>
+    <!-- MARKET -->
+    <section class="page" id="marketPage">
+      <header class="header">
+        <div class="header-top">
+          <div class="brand">
+            <h1>Market</h1>
+            <p>Top quick-view coins</p>
+          </div>
+          <div class="live-badge">24H</div>
         </div>
+      </header>
+
+      <div class="section">
+        <div class="section-title">Popular Coins</div>
+        <div class="section-sub">Fast market list</div>
+        <div class="market-list" id="marketList"></div>
       </div>
+    </section>
 
-      <div class="grid-two">
-        <div class="market-card">
-          <div class="small">Tracked Coins</div>
-          <div class="big" id="trackedCount">0</div>
-          <div class="mini" style="color:#93c5fd;">In your watchlist</div>
+    <!-- ALERTS -->
+    <section class="page" id="alertsPage">
+      <header class="header">
+        <div class="header-top">
+          <div class="brand">
+            <h1>Alerts</h1>
+            <p>Future notifications page</p>
+          </div>
+          <div class="live-badge">SOON</div>
         </div>
+      </header>
 
-        <div class="market-card">
-          <div class="small">Last Update</div>
-          <div class="big" id="lastUpdate">--:--</div>
-          <div class="mini" style="color:#86efac;">Auto refresh 5s</div>
+      <div class="section">
+        <div class="section-title">Alerts</div>
+        <div class="section-sub">This section is ready for future backend logic</div>
+        <div class="alerts-list">
+          <div class="mini-card">
+            <div class="mini-top">
+              <strong>BTC Alert</strong>
+            </div>
+            <div class="small">Example: notify when BTC goes above $100,000</div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-top">
+              <strong>ETH Alert</strong>
+            </div>
+            <div class="small">Example: notify when ETH drops below $2,000</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <div class="section-title">Your Watchlist</div>
-          <div class="section-sub">Saved on this device</div>
+    <!-- PROFILE -->
+    <section class="page" id="profilePage">
+      <header class="header">
+        <div class="header-top">
+          <div class="brand">
+            <h1>Profile</h1>
+            <p>Telegram user info</p>
+          </div>
+          <div class="live-badge" id="roleBadge">USER</div>
         </div>
-      </div>
+      </header>
 
-      <div class="status" id="status">Loading prices...</div>
-      <div class="watchlist" id="watchlist"></div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <div class="section-title">Quick Actions</div>
-          <div class="section-sub">More features later</div>
+      <div class="section">
+        <div class="section-title">Your Account</div>
+        <div class="section-sub">Loaded from Telegram Mini App</div>
+        <div class="profile-box" id="profileBox">
+          <div class="empty">Open inside Telegram to see your profile.</div>
         </div>
-      </div>
-
-      <div class="actions">
-        <button class="action-btn">
-          <strong>Alerts</strong>
-          <span>Price notifications later</span>
-        </button>
-        <button class="action-btn">
-          <strong>Marketplace</strong>
-          <span>Buy & sell later</span>
-        </button>
-        <button class="action-btn">
-          <strong>Favorites</strong>
-          <span>Saved items section</span>
-        </button>
-        <button class="action-btn">
-          <strong>Profile</strong>
-          <span>Telegram user info later</span>
-        </button>
       </div>
     </section>
   </div>
 
   <div class="bottom-nav">
-    <button class="nav-btn active">Home</button>
-    <button class="nav-btn">Market</button>
-    <button class="nav-btn">Alerts</button>
-    <button class="nav-btn">Profile</button>
+    <button class="nav-btn active" data-page="homePage">Home</button>
+    <button class="nav-btn" data-page="marketPage">Market</button>
+    <button class="nav-btn" data-page="alertsPage">Alerts</button>
+    <button class="nav-btn" data-page="profilePage">Profile</button>
   </div>
 
   <script>
-  const STORAGE_KEY = "price_checker_home_symbols";
-  const defaultSymbols = ["BTC", "ETH", "SOL"];
-  const ADMIN_IDS = [8268651549]; // replace with your Telegram user ID
+    const STORAGE_KEY = "price_checker_home_symbols";
+    const ADMIN_IDS = [8268651549]; // replace with your Telegram ID
+    const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL"];
+    const MARKET_SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE"];
 
-  let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultSymbols;
-  let refreshInterval = null;
-  let tgUser = null;
-  let isAdmin = false;
+    let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_SYMBOLS;
+    let tgUser = null;
+    let isAdmin = false;
+    let refreshInterval = null;
 
-  const watchlistEl = document.getElementById("watchlist");
-  const statusEl = document.getElementById("status");
-  const trackedCountEl = document.getElementById("trackedCount");
-  const lastUpdateEl = document.getElementById("lastUpdate");
-  const coinInput = document.getElementById("coinInput");
-  const addBtn = document.getElementById("addBtn");
-  const welcomeTitle = document.getElementById("welcomeTitle");
+    const watchlistEl = document.getElementById("watchlist");
+    const marketListEl = document.getElementById("marketList");
+    const statusEl = document.getElementById("status");
+    const trackedCountEl = document.getElementById("trackedCount");
+    const lastUpdateEl = document.getElementById("lastUpdate");
+    const coinInput = document.getElementById("coinInput");
+    const addBtn = document.getElementById("addBtn");
+    const welcomeTitle = document.getElementById("welcomeTitle");
+    const profileBox = document.getElementById("profileBox");
+    const roleBadge = document.getElementById("roleBadge");
 
-  function saveSymbols() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
-  }
+    function setupTelegram() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
 
-  function normalizeSymbol(value) {
-    return value.trim().toUpperCase().replace("USDT", "");
-  }
+        tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
 
-  function setupTelegram() {
-    if (window.Telegram && window.Telegram.WebApp) {
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
+        if (tgUser?.first_name) {
+          welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
+        }
 
-      tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
+        if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
+          isAdmin = true;
+        }
 
-      if (tgUser?.first_name && welcomeTitle) {
-        welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
-      }
-
-      if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
-        isAdmin = true;
-      }
-
-      applyTelegramTheme();
-      renderProfileBox();
-    } else {
-      renderProfileBox();
-    }
-  }
-
-  function applyTelegramTheme() {
-    if (!(window.Telegram && window.Telegram.WebApp)) return;
-
-    const theme = Telegram.WebApp.themeParams || {};
-    if (theme.bg_color) {
-      document.body.style.background = theme.bg_color;
-    }
-  }
-
-  function renderProfileBox() {
-    let profileBox = document.getElementById("profileBox");
-
-    if (!profileBox) {
-      profileBox = document.createElement("section");
-      profileBox.id = "profileBox";
-      profileBox.className = "section";
-      profileBox.style.marginBottom = "16px";
-
-      const header = document.querySelector(".header");
-      if (header && header.parentNode) {
-        header.insertAdjacentElement("afterend", profileBox);
+        renderProfile();
       } else {
-        document.querySelector(".app")?.prepend(profileBox);
+        renderProfile();
       }
     }
 
-    if (tgUser) {
+    function renderProfile() {
+      roleBadge.textContent = isAdmin ? "ADMIN" : "USER";
+
+      if (!tgUser) {
+        profileBox.innerHTML = `<div class="empty">Open inside Telegram to see your profile.</div>`;
+        return;
+      }
+
       profileBox.innerHTML = `
-        <div class="section-head">
-          <div>
-            <div class="section-title">Profile</div>
-            <div class="section-sub">Telegram login active</div>
-          </div>
-        </div>
-
-        <div class="market-card" style="padding:14px;">
-          <div class="small">Name</div>
-          <div class="big" style="font-size:18px;">${escapeHtml(
-            `${tgUser.first_name || ""} ${tgUser.last_name || ""}`.trim() || "Unknown"
-          )}</div>
-
-          <div class="small" style="margin-top:12px;">Username</div>
-          <div class="mini" style="font-size:14px; color:#ffffff;">
-            ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}
-          </div>
-
-          <div class="small" style="margin-top:12px;">Telegram ID</div>
-          <div class="mini" style="font-size:14px; color:#ffffff;">
-            ${tgUser.id || "Unknown"}
-          </div>
-
-          <div class="small" style="margin-top:12px;">Role</div>
-          <div class="mini" style="font-size:14px; color:${isAdmin ? "#86efac" : "#93c5fd"};">
-            ${isAdmin ? "Admin" : "User"}
-          </div>
-        </div>
-      `;
-    } else {
-      profileBox.innerHTML = `
-        <div class="section-head">
-          <div>
-            <div class="section-title">Profile</div>
-            <div class="section-sub">Telegram data not detected</div>
-          </div>
-        </div>
-
-        <div class="empty">
-          Open this page inside Telegram Mini App to see profile and admin role.
-        </div>
+        <p><strong>Name:</strong> ${escapeHtml((tgUser.first_name || "") + " " + (tgUser.last_name || ""))}</p>
+        <p><strong>Username:</strong> ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}</p>
+        <p><strong>Telegram ID:</strong> ${tgUser.id}</p>
+        <p><strong>Role:</strong> ${isAdmin ? "Admin" : "User"}</p>
       `;
     }
-  }
 
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  async function fetchCoin(symbol) {
-    try {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
-      if (!res.ok) throw new Error("Not found");
-
-      const data = await res.json();
-
-      return {
-        ok: true,
-        symbol,
-        price: Number(data.lastPrice),
-        change: Number(data.priceChangePercent)
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        symbol,
-        error: "Could not load price"
-      };
-    }
-  }
-
-  function renderWatchlist(items) {
-    if (!watchlistEl) return;
-
-    watchlistEl.innerHTML = "";
-
-    if (trackedCountEl) {
-      trackedCountEl.textContent = symbols.length;
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    if (!items.length) {
-      watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
-      return;
+    function saveSymbols() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
     }
 
-    items.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = "coin-card";
+    function normalizeSymbol(value) {
+      return value.trim().toUpperCase().replace("USDT", "");
+    }
 
+    async function fetchCoin(symbol) {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
+
+        return {
+          ok: true,
+          symbol,
+          price: Number(data.lastPrice),
+          change: Number(data.priceChangePercent)
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          symbol,
+          error: "Could not load price"
+        };
+      }
+    }
+
+    function createCoinCard(item, allowRemove = false) {
       if (!item.ok) {
-        card.innerHTML = `
-          <div class="coin-top">
-            <div class="coin-left">
-              <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
-              <div class="coin-info">
-                <h3>${item.symbol}</h3>
-                <p>${item.error}</p>
+        return `
+          <div class="coin-card">
+            <div class="coin-top">
+              <div class="coin-left">
+                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+                <div class="coin-info">
+                  <h3>${item.symbol}</h3>
+                  <p>${item.error}</p>
+                </div>
               </div>
+              ${allowRemove ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
             </div>
-            ${isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
           </div>
         `;
-      } else {
-        const changeClass = item.change >= 0 ? "up" : "down";
-        const sign = item.change >= 0 ? "+" : "";
+      }
 
-        card.innerHTML = `
+      const changeClass = item.change >= 0 ? "up" : "down";
+      const sign = item.change >= 0 ? "+" : "";
+
+      return `
+        <div class="coin-card">
           <div class="coin-top">
             <div class="coin-left">
               <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
@@ -721,9 +633,8 @@
                 <p>${item.symbol}/USDT</p>
               </div>
             </div>
-            ${isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
+            ${allowRemove && isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
           </div>
-
           <div class="coin-bottom">
             <div class="price">$${item.price.toLocaleString(undefined, {
               minimumFractionDigits: item.price < 1 ? 4 : 2,
@@ -731,92 +642,115 @@
             })}</div>
             <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
           </div>
-        `;
+        </div>
+      `;
+    }
+
+    async function loadWatchlist() {
+      statusEl.textContent = "Updating prices...";
+      const results = await Promise.all(symbols.map(fetchCoin));
+
+      trackedCountEl.textContent = symbols.length;
+
+      if (!results.length) {
+        watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
+      } else {
+        watchlistEl.innerHTML = results.map(item => createCoinCard(item, true)).join("");
       }
 
-      watchlistEl.appendChild(card);
-    });
-
-    document.querySelectorAll(".remove-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        removeCoin(btn.dataset.remove);
+      document.querySelectorAll(".remove-btn").forEach(btn => {
+        btn.addEventListener("click", () => removeCoin(btn.dataset.remove));
       });
-    });
-  }
 
-  async function loadPrices() {
-    if (statusEl) statusEl.textContent = "Updating prices...";
+      const now = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
 
-    const results = await Promise.all(symbols.map(fetchCoin));
-    renderWatchlist(results);
+      statusEl.textContent = `Last refresh: ${now}`;
+      lastUpdateEl.textContent = now;
+    }
 
-    const now = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
-    });
+    async function loadMarket() {
+      const results = await Promise.all(MARKET_SYMBOLS.map(fetchCoin));
+      marketListEl.innerHTML = results.map(item => createCoinCard(item, false)).join("");
+    }
 
-    if (statusEl) statusEl.textContent = `Last refresh: ${now}`;
-    if (lastUpdateEl) lastUpdateEl.textContent = now;
-  }
+    function addCoin(symbol) {
+      const clean = normalizeSymbol(symbol);
+      if (!clean) return;
 
-  function startAutoRefresh() {
-    clearInterval(refreshInterval);
-    refreshInterval = setInterval(loadPrices, 5000);
-  }
+      if (!isAdmin) {
+        statusEl.textContent = "Only admin can add coins";
+        coinInput.value = "";
+        return;
+      }
 
-  function addCoin(symbol) {
-    const clean = normalizeSymbol(symbol);
-    if (!clean) return;
+      if (symbols.includes(clean)) {
+        statusEl.textContent = `${clean} already exists`;
+        coinInput.value = "";
+        return;
+      }
 
-    if (!isAdmin) {
-      if (statusEl) statusEl.textContent = "Only admin can add coins";
+      symbols.unshift(clean);
+      saveSymbols();
       coinInput.value = "";
-      return;
+      loadWatchlist();
     }
 
-    if (symbols.includes(clean)) {
-      if (statusEl) statusEl.textContent = `${clean} already exists`;
-      coinInput.value = "";
-      return;
+    function removeCoin(symbol) {
+      if (!isAdmin) {
+        statusEl.textContent = "Only admin can remove coins";
+        return;
+      }
+
+      symbols = symbols.filter(s => s !== symbol);
+      saveSymbols();
+      loadWatchlist();
     }
 
-    symbols.unshift(clean);
-    saveSymbols();
-    coinInput.value = "";
-    loadPrices();
-  }
-
-  function removeCoin(symbol) {
-    if (!isAdmin) {
-      if (statusEl) statusEl.textContent = "Only admin can remove coins";
-      return;
+    function startAutoRefresh() {
+      clearInterval(refreshInterval);
+      refreshInterval = setInterval(() => {
+        loadWatchlist();
+        loadMarket();
+      }, 5000);
     }
 
-    symbols = symbols.filter((s) => s !== symbol);
-    saveSymbols();
-    loadPrices();
-  }
+    function showPage(pageId) {
+      document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
+      });
 
-  if (addBtn) {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.remove("active");
+      });
+
+      document.getElementById(pageId).classList.add("active");
+      document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
+    }
+
     addBtn.addEventListener("click", () => addCoin(coinInput.value));
-  }
 
-  if (coinInput) {
     coinInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") addCoin(coinInput.value);
     });
-  }
 
-  document.querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      addCoin(chip.dataset.symbol);
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => addCoin(chip.dataset.symbol));
     });
-  });
 
-  setupTelegram();
-  loadPrices();
-  startAutoRefresh();
-</script>
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        showPage(btn.dataset.page);
+      });
+    });
+
+    setupTelegram();
+    loadWatchlist();
+    loadMarket();
+    startAutoRefresh();
+  </script>
 </body>
 </html>
