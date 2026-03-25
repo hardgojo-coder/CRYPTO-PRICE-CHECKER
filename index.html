@@ -526,184 +526,297 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "price_checker_home_symbols";
-    const defaultSymbols = ["BTC", "ETH", "SOL"];
-    let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultSymbols;
-    let refreshInterval;
+  const STORAGE_KEY = "price_checker_home_symbols";
+  const defaultSymbols = ["BTC", "ETH", "SOL"];
+  const ADMIN_IDS = [123456789]; // replace with your Telegram user ID
 
-    const watchlistEl = document.getElementById("watchlist");
-    const statusEl = document.getElementById("status");
-    const trackedCountEl = document.getElementById("trackedCount");
-    const lastUpdateEl = document.getElementById("lastUpdate");
-    const coinInput = document.getElementById("coinInput");
-    const addBtn = document.getElementById("addBtn");
-    const welcomeTitle = document.getElementById("welcomeTitle");
+  let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultSymbols;
+  let refreshInterval = null;
+  let tgUser = null;
+  let isAdmin = false;
 
-    function setupTelegram() {
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
+  const watchlistEl = document.getElementById("watchlist");
+  const statusEl = document.getElementById("status");
+  const trackedCountEl = document.getElementById("trackedCount");
+  const lastUpdateEl = document.getElementById("lastUpdate");
+  const coinInput = document.getElementById("coinInput");
+  const addBtn = document.getElementById("addBtn");
+  const welcomeTitle = document.getElementById("welcomeTitle");
 
-        const user = Telegram.WebApp.initDataUnsafe?.user;
-        if (user?.first_name) {
-          welcomeTitle.textContent = `Welcome, ${user.first_name} 👋`;
-        }
+  function saveSymbols() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+  }
 
-        const tgBg = Telegram.WebApp.themeParams?.bg_color;
-        if (tgBg) {
-          document.body.style.background = tgBg;
-        }
+  function normalizeSymbol(value) {
+    return value.trim().toUpperCase().replace("USDT", "");
+  }
+
+  function setupTelegram() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+
+      tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
+
+      if (tgUser?.first_name && welcomeTitle) {
+        welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
+      }
+
+      if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
+        isAdmin = true;
+      }
+
+      applyTelegramTheme();
+      renderProfileBox();
+    } else {
+      renderProfileBox();
+    }
+  }
+
+  function applyTelegramTheme() {
+    if (!(window.Telegram && window.Telegram.WebApp)) return;
+
+    const theme = Telegram.WebApp.themeParams || {};
+    if (theme.bg_color) {
+      document.body.style.background = theme.bg_color;
+    }
+  }
+
+  function renderProfileBox() {
+    let profileBox = document.getElementById("profileBox");
+
+    if (!profileBox) {
+      profileBox = document.createElement("section");
+      profileBox.id = "profileBox";
+      profileBox.className = "section";
+      profileBox.style.marginBottom = "16px";
+
+      const header = document.querySelector(".header");
+      if (header && header.parentNode) {
+        header.insertAdjacentElement("afterend", profileBox);
+      } else {
+        document.querySelector(".app")?.prepend(profileBox);
       }
     }
 
-    function saveSymbols() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+    if (tgUser) {
+      profileBox.innerHTML = `
+        <div class="section-head">
+          <div>
+            <div class="section-title">Profile</div>
+            <div class="section-sub">Telegram login active</div>
+          </div>
+        </div>
+
+        <div class="market-card" style="padding:14px;">
+          <div class="small">Name</div>
+          <div class="big" style="font-size:18px;">${escapeHtml(
+            `${tgUser.first_name || ""} ${tgUser.last_name || ""}`.trim() || "Unknown"
+          )}</div>
+
+          <div class="small" style="margin-top:12px;">Username</div>
+          <div class="mini" style="font-size:14px; color:#ffffff;">
+            ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}
+          </div>
+
+          <div class="small" style="margin-top:12px;">Telegram ID</div>
+          <div class="mini" style="font-size:14px; color:#ffffff;">
+            ${tgUser.id || "Unknown"}
+          </div>
+
+          <div class="small" style="margin-top:12px;">Role</div>
+          <div class="mini" style="font-size:14px; color:${isAdmin ? "#86efac" : "#93c5fd"};">
+            ${isAdmin ? "Admin" : "User"}
+          </div>
+        </div>
+      `;
+    } else {
+      profileBox.innerHTML = `
+        <div class="section-head">
+          <div>
+            <div class="section-title">Profile</div>
+            <div class="section-sub">Telegram data not detected</div>
+          </div>
+        </div>
+
+        <div class="empty">
+          Open this page inside Telegram Mini App to see profile and admin role.
+        </div>
+      `;
     }
+  }
 
-    function normalizeSymbol(value) {
-      return value.trim().toUpperCase().replace("USDT", "");
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  async function fetchCoin(symbol) {
+    try {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+      if (!res.ok) throw new Error("Not found");
+
+      const data = await res.json();
+
+      return {
+        ok: true,
+        symbol,
+        price: Number(data.lastPrice),
+        change: Number(data.priceChangePercent)
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        symbol,
+        error: "Could not load price"
+      };
     }
+  }
 
-    async function fetchCoin(symbol) {
-      try {
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
+  function renderWatchlist(items) {
+    if (!watchlistEl) return;
 
-        return {
-          ok: true,
-          symbol: symbol,
-          price: Number(data.lastPrice),
-          change: Number(data.priceChangePercent)
-        };
-      } catch (e) {
-        return {
-          ok: false,
-          symbol: symbol,
-          error: "Could not load price"
-        };
-      }
-    }
+    watchlistEl.innerHTML = "";
 
-    function renderWatchlist(items) {
-      watchlistEl.innerHTML = "";
+    if (trackedCountEl) {
       trackedCountEl.textContent = symbols.length;
+    }
 
-      if (!items.length) {
-        watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
-        return;
+    if (!items.length) {
+      watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
+      return;
+    }
+
+    items.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "coin-card";
+
+      if (!item.ok) {
+        card.innerHTML = `
+          <div class="coin-top">
+            <div class="coin-left">
+              <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+              <div class="coin-info">
+                <h3>${item.symbol}</h3>
+                <p>${item.error}</p>
+              </div>
+            </div>
+            ${isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
+          </div>
+        `;
+      } else {
+        const changeClass = item.change >= 0 ? "up" : "down";
+        const sign = item.change >= 0 ? "+" : "";
+
+        card.innerHTML = `
+          <div class="coin-top">
+            <div class="coin-left">
+              <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+              <div class="coin-info">
+                <h3>${item.symbol}</h3>
+                <p>${item.symbol}/USDT</p>
+              </div>
+            </div>
+            ${isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
+          </div>
+
+          <div class="coin-bottom">
+            <div class="price">$${item.price.toLocaleString(undefined, {
+              minimumFractionDigits: item.price < 1 ? 4 : 2,
+              maximumFractionDigits: item.price < 1 ? 6 : 2
+            })}</div>
+            <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
+          </div>
+        `;
       }
 
-      items.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = "coin-card";
+      watchlistEl.appendChild(card);
+    });
 
-        if (!item.ok) {
-          card.innerHTML = `
-            <div class="coin-top">
-              <div class="coin-left">
-                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
-                <div class="coin-info">
-                  <h3>${item.symbol}</h3>
-                  <p>${item.error}</p>
-                </div>
-              </div>
-              <button class="remove-btn" data-remove="${item.symbol}">Remove</button>
-            </div>
-          `;
-        } else {
-          const changeClass = item.change >= 0 ? "up" : "down";
-          const sign = item.change >= 0 ? "+" : "";
-
-          card.innerHTML = `
-            <div class="coin-top">
-              <div class="coin-left">
-                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
-                <div class="coin-info">
-                  <h3>${item.symbol}</h3>
-                  <p>${item.symbol}/USDT</p>
-                </div>
-              </div>
-              <button class="remove-btn" data-remove="${item.symbol}">Remove</button>
-            </div>
-
-            <div class="coin-bottom">
-              <div class="price">$${item.price.toLocaleString(undefined, {
-                minimumFractionDigits: item.price < 1 ? 4 : 2,
-                maximumFractionDigits: item.price < 1 ? 6 : 2
-              })}</div>
-              <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
-            </div>
-          `;
-        }
-
-        watchlistEl.appendChild(card);
+    document.querySelectorAll(".remove-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        removeCoin(btn.dataset.remove);
       });
+    });
+  }
 
-      document.querySelectorAll(".remove-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          removeCoin(btn.dataset.remove);
-        });
-      });
-    }
+  async function loadPrices() {
+    if (statusEl) statusEl.textContent = "Updating prices...";
 
-    async function loadPrices() {
-      statusEl.textContent = "Updating prices...";
-      const results = await Promise.all(symbols.map(fetchCoin));
-      renderWatchlist(results);
+    const results = await Promise.all(symbols.map(fetchCoin));
+    renderWatchlist(results);
 
-      const now = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
+    const now = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
 
-      statusEl.textContent = `Last refresh: ${now}`;
-      lastUpdateEl.textContent = now;
-    }
+    if (statusEl) statusEl.textContent = `Last refresh: ${now}`;
+    if (lastUpdateEl) lastUpdateEl.textContent = now;
+  }
 
-    function startAutoRefresh() {
-      clearInterval(refreshInterval);
-      refreshInterval = setInterval(loadPrices, 5000);
-    }
+  function startAutoRefresh() {
+    clearInterval(refreshInterval);
+    refreshInterval = setInterval(loadPrices, 5000);
+  }
 
-    function addCoin(symbol) {
-      const clean = normalizeSymbol(symbol);
-      if (!clean) return;
+  function addCoin(symbol) {
+    const clean = normalizeSymbol(symbol);
+    if (!clean) return;
 
-      if (symbols.includes(clean)) {
-        statusEl.textContent = `${clean} already exists`;
-        coinInput.value = "";
-        return;
-      }
-
-      symbols.unshift(clean);
-      saveSymbols();
+    if (!isAdmin) {
+      if (statusEl) statusEl.textContent = "Only admin can add coins";
       coinInput.value = "";
-      loadPrices();
+      return;
     }
 
-    function removeCoin(symbol) {
-      symbols = symbols.filter((s) => s !== symbol);
-      saveSymbols();
-      loadPrices();
+    if (symbols.includes(clean)) {
+      if (statusEl) statusEl.textContent = `${clean} already exists`;
+      coinInput.value = "";
+      return;
     }
 
+    symbols.unshift(clean);
+    saveSymbols();
+    coinInput.value = "";
+    loadPrices();
+  }
+
+  function removeCoin(symbol) {
+    if (!isAdmin) {
+      if (statusEl) statusEl.textContent = "Only admin can remove coins";
+      return;
+    }
+
+    symbols = symbols.filter((s) => s !== symbol);
+    saveSymbols();
+    loadPrices();
+  }
+
+  if (addBtn) {
     addBtn.addEventListener("click", () => addCoin(coinInput.value));
+  }
 
+  if (coinInput) {
     coinInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") addCoin(coinInput.value);
     });
+  }
 
-    document.querySelectorAll(".chip").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        addCoin(chip.dataset.symbol);
-      });
+  document.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      addCoin(chip.dataset.symbol);
     });
+  });
 
-    setupTelegram();
-    loadPrices();
-    startAutoRefresh();
-  </script>
+  setupTelegram();
+  loadPrices();
+  startAutoRefresh();
+</script>
 </body>
 </html>
