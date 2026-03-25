@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Price Checker Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-2: #111827;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #ffffff;
+      --muted: #94a3b8;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(180deg, var(--bg), var(--bg-2));
+      color: var(--text);
+      min-height: 100vh;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 18px 14px 90px;
+    }
+
+    .header {
+      margin-bottom: 18px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand h1 {
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .brand p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .live-badge {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.28);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .welcome-card,
+    .search-section,
+    .section,
+    .market-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .welcome-card {
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .welcome-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .welcome-sub {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .search-section {
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .search-row input {
+      flex: 1;
+      height: 48px;
+      border: none;
+      outline: none;
+      border-radius: 14px;
+      padding: 0 14px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+    }
+
+    .search-row input::placeholder {
+      color: #b8c4d6;
+    }
+
+    .btn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      border-radius: 14px;
+      transition: 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-add {
+      width: 88px;
+      background: var(--blue);
+      color: white;
+      font-size: 15px;
+    }
+
+    .quick-coins {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-coins::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 13px;
+      transition: 0.2s ease;
+    }
+
+    .chip:active {
+      transform: scale(0.97);
+    }
+
+    .section {
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .watchlist {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .coin-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .coin-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .coin-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .coin-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(59, 130, 246, 0.18);
+      font-weight: 800;
+      font-size: 14px;
+      color: #93c5fd;
+      flex-shrink: 0;
+    }
+
+    .coin-info h3 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .coin-info p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .remove-btn {
+      border: none;
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.22);
+      padding: 8px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .coin-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .price {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .change {
+      font-size: 14px;
+      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 12px;
+    }
+
+    .up {
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.14);
+    }
+
+    .down {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.14);
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .market-card {
+      padding: 14px;
+    }
+
+    .market-card .small {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .market-card .big {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .market-card .mini {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: white;
+      padding: 14px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .action-btn strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .action-btn span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 18px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      font-size: 14px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 10px;
+      width: calc(100% - 20px);
+      max-width: 500px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      border-radius: 22px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: white;
+      border-radius: 16px;
+      padding: 10px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: rgba(59, 130, 246, 0.18);
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    @media (max-width: 380px) {
+      .brand h1 {
+        font-size: 24px;
+      }
+
+      .price {
+        font-size: 24px;
+      }
+
+      .grid-two,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <div class="brand">
+          <h1>Price Checker</h1>
+          <p>Mini app home for live crypto tracking</p>
+        </div>
+        <div class="live-badge">LIVE</div>
+      </div>
+
+      <div class="welcome-card">
+        <div class="welcome-title" id="welcomeTitle">Welcome 👋</div>
+        <div class="welcome-sub">
+          Track coins fast, save your watchlist, and later we’ll connect marketplace features here.
+        </div>
+      </div>
+    </header>
+
+    <section class="search-section">
+      <div class="search-row">
+        <input type="text" id="coinInput" placeholder="Enter symbol, e.g. BTC" />
+        <button class="btn btn-add" id="addBtn">Add</button>
+      </div>
+
+      <div class="quick-coins">
+        <button class="chip" data-symbol="BTC">BTC</button>
+        <button class="chip" data-symbol="ETH">ETH</button>
+        <button class="chip" data-symbol="SOL">SOL</button>
+        <button class="chip" data-symbol="BNB">BNB</button>
+        <button class="chip" data-symbol="XRP">XRP</button>
+        <button class="chip" data-symbol="DOGE">DOGE</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Market Overview</div>
+          <div class="section-sub">Quick home info</div>
+        </div>
+      </div>
+
+      <div class="grid-two">
+        <div class="market-card">
+          <div class="small">Tracked Coins</div>
+          <div class="big" id="trackedCount">0</div>
+          <div class="mini" style="color:#93c5fd;">In your watchlist</div>
+        </div>
+
+        <div class="market-card">
+          <div class="small">Last Update</div>
+          <div class="big" id="lastUpdate">--:--</div>
+          <div class="mini" style="color:#86efac;">Auto refresh 5s</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Your Watchlist</div>
+          <div class="section-sub">Saved on this device</div>
+        </div>
+      </div>
+
+      <div class="status" id="status">Loading prices...</div>
+      <div class="watchlist" id="watchlist"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Quick Actions</div>
+          <div class="section-sub">More features later</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="action-btn">
+          <strong>Alerts</strong>
+          <span>Price notifications later</span>
+        </button>
+        <button class="action-btn">
+          <strong>Marketplace</strong>
+          <span>Buy & sell later</span>
+        </button>
+        <button class="action-btn">
+          <strong>Favorites</strong>
+          <span>Saved items section</span>
+        </button>
+        <button class="action-btn">
+          <strong>Profile</strong>
+          <span>Telegram user info later</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active">Home</button>
+    <button class="nav-btn">Market</button>
+    <button class="nav-btn">Alerts</button>
+    <button class="nav-btn">Profile</button>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "price_checker_home_symbols";
+    const defaultSymbols = ["BTC", "ETH", "SOL"];
+    let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultSymbols;
+    let refreshInterval;
+
+    const watchlistEl = document.getElementById("watchlist");
+    const statusEl = document.getElementById("status");
+    const trackedCountEl = document.getElementById("trackedCount");
+    const lastUpdateEl = document.getElementById("lastUpdate");
+    const coinInput = document.getElementById("coinInput");
+    const addBtn = document.getElementById("addBtn");
+    const welcomeTitle = document.getElementById("welcomeTitle");
+
+    function setupTelegram() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        const user = Telegram.WebApp.initDataUnsafe?.user;
+        if (user?.first_name) {
+          welcomeTitle.textContent = `Welcome, ${user.first_name} 👋`;
+        }
+
+        const tgBg = Telegram.WebApp.themeParams?.bg_color;
+        if (tgBg) {
+          document.body.style.background = tgBg;
+        }
+      }
+    }
+
+    function saveSymbols() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+    }
+
+    function normalizeSymbol(value) {
+      return value.trim().toUpperCase().replace("USDT", "");
+    }
+
+    async function fetchCoin(symbol) {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
+
+        return {
+          ok: true,
+          symbol: symbol,
+          price: Number(data.lastPrice),
+          change: Number(data.priceChangePercent)
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          symbol: symbol,
+          error: "Could not load price"
+        };
+      }
+    }
+
+    function renderWatchlist(items) {
+      watchlistEl.innerHTML = "";
+      trackedCountEl.textContent = symbols.length;
+
+      if (!items.length) {
+        watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
+        return;
+      }
+
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "coin-card";
+
+        if (!item.ok) {
+          card.innerHTML = `
+            <div class="coin-top">
+              <div class="coin-left">
+                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+                <div class="coin-info">
+                  <h3>${item.symbol}</h3>
+                  <p>${item.error}</p>
+                </div>
+              </div>
+              <button class="remove-btn" data-remove="${item.symbol}">Remove</button>
+            </div>
+          `;
+        } else {
+          const changeClass = item.change >= 0 ? "up" : "down";
+          const sign = item.change >= 0 ? "+" : "";
+
+          card.innerHTML = `
+            <div class="coin-top">
+              <div class="coin-left">
+                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+                <div class="coin-info">
+                  <h3>${item.symbol}</h3>
+                  <p>${item.symbol}/USDT</p>
+                </div>
+              </div>
+              <button class="remove-btn" data-remove="${item.symbol}">Remove</button>
+            </div>
+
+            <div class="coin-bottom">
+              <div class="price">$${item.price.toLocaleString(undefined, {
+                minimumFractionDigits: item.price < 1 ? 4 : 2,
+                maximumFractionDigits: item.price < 1 ? 6 : 2
+              })}</div>
+              <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
+            </div>
+          `;
+        }
+
+        watchlistEl.appendChild(card);
+      });
+
+      document.querySelectorAll(".remove-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          removeCoin(btn.dataset.remove);
+        });
+      });
+    }
+
+    async function loadPrices() {
+      statusEl.textContent = "Updating prices...";
+      const results = await Promise.all(symbols.map(fetchCoin));
+      renderWatchlist(results);
+
+      const now = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+
+      statusEl.textContent = `Last refresh: ${now}`;
+      lastUpdateEl.textContent = now;
+    }
+
+    function startAutoRefresh() {
+      clearInterval(refreshInterval);
+      refreshInterval = setInterval(loadPrices, 5000);
+    }
+
+    function addCoin(symbol) {
+      const clean = normalizeSymbol(symbol);
+      if (!clean) return;
+
+      if (symbols.includes(clean)) {
+        statusEl.textContent = `${clean} already exists`;
+        coinInput.value = "";
+        return;
+      }
+
+      symbols.unshift(clean);
+      saveSymbols();
+      coinInput.value = "";
+      loadPrices();
+    }
+
+    function removeCoin(symbol) {
+      symbols = symbols.filter((s) => s !== symbol);
+      saveSymbols();
+      loadPrices();
+    }
+
+    addBtn.addEventListener("click", () => addCoin(coinInput.value));
+
+    coinInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addCoin(coinInput.value);
+    });
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        addCoin(chip.dataset.symbol);
+      });
+    });
+
+    setupTelegram();
+    loadPrices();
+    startAutoRefresh();
+  </script>
+</body>
+</html>
