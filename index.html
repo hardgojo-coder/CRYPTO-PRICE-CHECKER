@@ -505,124 +505,106 @@
     <button class="nav-btn" data-page="profilePage">Profile</button>
   </div>
 
-  <script>
-    const STORAGE_KEY = "price_checker_home_symbols";
-    const ADMIN_IDS = [123456789]; // replace with your Telegram ID
-    const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL"];
-    const MARKET_SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE"];
+<script>
+  const STORAGE_KEY = "price_checker_home_symbols";
+  const ADMIN_IDS = [123456789]; // replace with your Telegram ID
+  const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL"];
+  const MARKET_SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE", "ADA", "AVAX", "DOT", "TRX", "LINK", "TON"];
 
-    let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_SYMBOLS;
-    let tgUser = null;
-    let isAdmin = false;
-    let refreshInterval = null;
+  let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_SYMBOLS;
+  let tgUser = null;
+  let isAdmin = false;
+  let refreshInterval = null;
+  let currentSearch = "";
 
-    const watchlistEl = document.getElementById("watchlist");
-    const marketListEl = document.getElementById("marketList");
-    const statusEl = document.getElementById("status");
-    const trackedCountEl = document.getElementById("trackedCount");
-    const lastUpdateEl = document.getElementById("lastUpdate");
-    const coinInput = document.getElementById("coinInput");
-    const addBtn = document.getElementById("addBtn");
-    const welcomeTitle = document.getElementById("welcomeTitle");
-    const profileBox = document.getElementById("profileBox");
-    const roleBadge = document.getElementById("roleBadge");
+  const watchlistEl = document.getElementById("watchlist");
+  const marketListEl = document.getElementById("marketList");
+  const statusEl = document.getElementById("status");
+  const trackedCountEl = document.getElementById("trackedCount");
+  const lastUpdateEl = document.getElementById("lastUpdate");
+  const coinInput = document.getElementById("coinInput");
+  const addBtn = document.getElementById("addBtn");
+  const welcomeTitle = document.getElementById("welcomeTitle");
+  const profileBox = document.getElementById("profileBox");
+  const roleBadge = document.getElementById("roleBadge");
 
-    function setupTelegram() {
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
+  function setupTelegram() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
 
-        tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
+      tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
 
-        if (tgUser?.first_name) {
-          welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
-        }
-
-        if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
-          isAdmin = true;
-        }
-
-        renderProfile();
-      } else {
-        renderProfile();
-      }
-    }
-
-    function renderProfile() {
-      roleBadge.textContent = isAdmin ? "ADMIN" : "USER";
-
-      if (!tgUser) {
-        profileBox.innerHTML = `<div class="empty">Open inside Telegram to see your profile.</div>`;
-        return;
+      if (tgUser?.first_name) {
+        welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
       }
 
-      profileBox.innerHTML = `
-        <p><strong>Name:</strong> ${escapeHtml((tgUser.first_name || "") + " " + (tgUser.last_name || ""))}</p>
-        <p><strong>Username:</strong> ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}</p>
-        <p><strong>Telegram ID:</strong> ${tgUser.id}</p>
-        <p><strong>Role:</strong> ${isAdmin ? "Admin" : "User"}</p>
-      `;
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function saveSymbols() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
-    }
-
-    function normalizeSymbol(value) {
-      return value.trim().toUpperCase().replace("USDT", "");
-    }
-
-    async function fetchCoin(symbol) {
-      try {
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
-
-        return {
-          ok: true,
-          symbol,
-          price: Number(data.lastPrice),
-          change: Number(data.priceChangePercent)
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          symbol,
-          error: "Could not load price"
-        };
-      }
-    }
-
-    function createCoinCard(item, allowRemove = false) {
-      if (!item.ok) {
-        return `
-          <div class="coin-card">
-            <div class="coin-top">
-              <div class="coin-left">
-                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
-                <div class="coin-info">
-                  <h3>${item.symbol}</h3>
-                  <p>${item.error}</p>
-                </div>
-              </div>
-              ${allowRemove ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
-            </div>
-          </div>
-        `;
+      if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
+        isAdmin = true;
       }
 
-      const changeClass = item.change >= 0 ? "up" : "down";
-      const sign = item.change >= 0 ? "+" : "";
+      renderProfile();
+    } else {
+      renderProfile();
+    }
+  }
 
+  function renderProfile() {
+    roleBadge.textContent = isAdmin ? "ADMIN" : "USER";
+
+    if (!tgUser) {
+      profileBox.innerHTML = `<div class="empty">Open inside Telegram to see your profile.</div>`;
+      return;
+    }
+
+    profileBox.innerHTML = `
+      <p><strong>Name:</strong> ${escapeHtml(((tgUser.first_name || "") + " " + (tgUser.last_name || "")).trim() || "Unknown")}</p>
+      <p><strong>Username:</strong> ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}</p>
+      <p><strong>Telegram ID:</strong> ${tgUser.id}</p>
+      <p><strong>Role:</strong> ${isAdmin ? "Admin" : "User"}</p>
+    `;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function saveSymbols() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+  }
+
+  function normalizeSymbol(value) {
+    return value.trim().toUpperCase().replace("USDT", "");
+  }
+
+  async function fetchCoin(symbol) {
+    try {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+      if (!res.ok) throw new Error("Not found");
+      const data = await res.json();
+
+      return {
+        ok: true,
+        symbol,
+        price: Number(data.lastPrice),
+        change: Number(data.priceChangePercent)
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        symbol,
+        error: "Could not load price"
+      };
+    }
+  }
+
+  function createCoinCard(item, allowRemove = false) {
+    if (!item.ok) {
       return `
         <div class="coin-card">
           <div class="coin-top">
@@ -630,127 +612,174 @@
               <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
               <div class="coin-info">
                 <h3>${item.symbol}</h3>
-                <p>${item.symbol}/USDT</p>
+                <p>${item.error}</p>
               </div>
             </div>
             ${allowRemove && isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
-          </div>
-          <div class="coin-bottom">
-            <div class="price">$${item.price.toLocaleString(undefined, {
-              minimumFractionDigits: item.price < 1 ? 4 : 2,
-              maximumFractionDigits: item.price < 1 ? 6 : 2
-            })}</div>
-            <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
           </div>
         </div>
       `;
     }
 
-    async function loadWatchlist() {
-      statusEl.textContent = "Updating prices...";
-      const results = await Promise.all(symbols.map(fetchCoin));
+    const changeClass = item.change >= 0 ? "up" : "down";
+    const sign = item.change >= 0 ? "+" : "";
 
-      trackedCountEl.textContent = symbols.length;
+    return `
+      <div class="coin-card">
+        <div class="coin-top">
+          <div class="coin-left">
+            <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+            <div class="coin-info">
+              <h3>${item.symbol}</h3>
+              <p>${item.symbol}/USDT</p>
+            </div>
+          </div>
+          ${allowRemove && isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
+        </div>
+        <div class="coin-bottom">
+          <div class="price">$${item.price.toLocaleString(undefined, {
+            minimumFractionDigits: item.price < 1 ? 4 : 2,
+            maximumFractionDigits: item.price < 1 ? 6 : 2
+          })}</div>
+          <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
+        </div>
+      </div>
+    `;
+  }
 
-      if (!results.length) {
-        watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
-      } else {
-        watchlistEl.innerHTML = results.map(item => createCoinCard(item, true)).join("");
-      }
+  function getFilteredSymbols(list) {
+    const q = normalizeSymbol(currentSearch);
+    if (!q) return list;
+    return list.filter(symbol => symbol.includes(q));
+  }
 
-      document.querySelectorAll(".remove-btn").forEach(btn => {
-        btn.addEventListener("click", () => removeCoin(btn.dataset.remove));
-      });
+  async function loadWatchlist() {
+    statusEl.textContent = "Updating prices...";
 
+    const filteredSymbols = getFilteredSymbols(symbols);
+    trackedCountEl.textContent = filteredSymbols.length;
+
+    if (!filteredSymbols.length) {
+      watchlistEl.innerHTML = `<div class="empty">No matching coins found.</div>`;
       const now = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit"
       });
-
-      statusEl.textContent = `Last refresh: ${now}`;
+      statusEl.textContent = currentSearch ? `Search: ${normalizeSymbol(currentSearch)}` : `Last refresh: ${now}`;
       lastUpdateEl.textContent = now;
+      return;
     }
 
-    async function loadMarket() {
-      const results = await Promise.all(MARKET_SYMBOLS.map(fetchCoin));
-      marketListEl.innerHTML = results.map(item => createCoinCard(item, false)).join("");
-    }
+    const results = await Promise.all(filteredSymbols.map(fetchCoin));
+    watchlistEl.innerHTML = results.map(item => createCoinCard(item, true)).join("");
 
-    function addCoin(symbol) {
-      const clean = normalizeSymbol(symbol);
-      if (!clean) return;
-
-      if (!isAdmin) {
-        statusEl.textContent = "Only admin can add coins";
-        coinInput.value = "";
-        return;
-      }
-
-      if (symbols.includes(clean)) {
-        statusEl.textContent = `${clean} already exists`;
-        coinInput.value = "";
-        return;
-      }
-
-      symbols.unshift(clean);
-      saveSymbols();
-      coinInput.value = "";
-      loadWatchlist();
-    }
-
-    function removeCoin(symbol) {
-      if (!isAdmin) {
-        statusEl.textContent = "Only admin can remove coins";
-        return;
-      }
-
-      symbols = symbols.filter(s => s !== symbol);
-      saveSymbols();
-      loadWatchlist();
-    }
-
-    function startAutoRefresh() {
-      clearInterval(refreshInterval);
-      refreshInterval = setInterval(() => {
-        loadWatchlist();
-        loadMarket();
-      }, 5000);
-    }
-
-    function showPage(pageId) {
-      document.querySelectorAll(".page").forEach(page => {
-        page.classList.remove("active");
-      });
-
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.remove("active");
-      });
-
-      document.getElementById(pageId).classList.add("active");
-      document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
-    }
-
-    addBtn.addEventListener("click", () => addCoin(coinInput.value));
-
-    coinInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addCoin(coinInput.value);
+    document.querySelectorAll(".remove-btn").forEach(btn => {
+      btn.addEventListener("click", () => removeCoin(btn.dataset.remove));
     });
 
-    document.querySelectorAll(".chip").forEach(chip => {
-      chip.addEventListener("click", () => addCoin(chip.dataset.symbol));
+    const now = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+
+    statusEl.textContent = currentSearch
+      ? `Search results for: ${normalizeSymbol(currentSearch)}`
+      : `Last refresh: ${now}`;
+
+    lastUpdateEl.textContent = now;
+  }
+
+  async function loadMarket() {
+    const filteredMarket = getFilteredSymbols(MARKET_SYMBOLS);
+
+    if (!filteredMarket.length) {
+      marketListEl.innerHTML = `<div class="empty">No matching market coins found.</div>`;
+      return;
+    }
+
+    const results = await Promise.all(filteredMarket.map(fetchCoin));
+    marketListEl.innerHTML = results.map(item => createCoinCard(item, false)).join("");
+  }
+
+  function removeCoin(symbol) {
+    if (!isAdmin) {
+      statusEl.textContent = "Only admin can remove coins";
+      return;
+    }
+
+    symbols = symbols.filter(s => s !== symbol);
+    saveSymbols();
+    loadWatchlist();
+  }
+
+  function runSearch() {
+    currentSearch = coinInput.value;
+    loadWatchlist();
+    loadMarket();
+  }
+
+  function clearSearch() {
+    currentSearch = "";
+    coinInput.value = "";
+    loadWatchlist();
+    loadMarket();
+  }
+
+  function startAutoRefresh() {
+    clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+      loadWatchlist();
+      loadMarket();
+    }, 3000);
+  }
+
+  function showPage(pageId) {
+    document.querySelectorAll(".page").forEach(page => {
+      page.classList.remove("active");
     });
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        showPage(btn.dataset.page);
-      });
+      btn.classList.remove("active");
     });
 
-    setupTelegram();
-    loadWatchlist();
-    loadMarket();
-    startAutoRefresh();
-  </script>
+    document.getElementById(pageId).classList.add("active");
+    document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
+  }
+
+  addBtn.addEventListener("click", runSearch);
+
+  coinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      runSearch();
+    }
+  });
+
+  coinInput.addEventListener("input", () => {
+    if (!coinInput.value.trim()) {
+      clearSearch();
+    }
+  });
+
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      coinInput.value = chip.dataset.symbol;
+      runSearch();
+    });
+  });
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      showPage(btn.dataset.page);
+    });
+  });
+
+  setupTelegram();
+  loadWatchlist();
+  loadMarket();
+  startAutoRefresh();
+</script>
+   
 </body>
 </html>
