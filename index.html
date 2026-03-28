@@ -506,123 +506,229 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "price_checker_home_symbols";
-    const ADMIN_IDS = [8268651549]; // replace with your Telegram ID
-    const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL"];
-    const MARKET_SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE"];
+<script>
+  const STORAGE_KEY = "price_checker_home_symbols";
+  const ADMIN_IDS = [123456789]; // replace with your Telegram ID if you still want admin role in profile
+  const DEFAULT_SYMBOLS = ["BTC", "ETH", "SOL"];
+  const MARKET_SYMBOLS = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE"];
+  const SUGGESTION_SYMBOLS = [
+    "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE",
+    "ADA", "AVAX", "DOT", "TRX", "MATIC", "LINK",
+    "TON", "LTC", "BCH", "SHIB", "ATOM", "XLM"
+  ];
 
-    let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_SYMBOLS;
-    let tgUser = null;
-    let isAdmin = false;
-    let refreshInterval = null;
+  let symbols = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_SYMBOLS;
+  let tgUser = null;
+  let isAdmin = false;
+  let refreshInterval = null;
+  let selectedSuggestionIndex = -1;
 
-    const watchlistEl = document.getElementById("watchlist");
-    const marketListEl = document.getElementById("marketList");
-    const statusEl = document.getElementById("status");
-    const trackedCountEl = document.getElementById("trackedCount");
-    const lastUpdateEl = document.getElementById("lastUpdate");
-    const coinInput = document.getElementById("coinInput");
-    const addBtn = document.getElementById("addBtn");
-    const welcomeTitle = document.getElementById("welcomeTitle");
-    const profileBox = document.getElementById("profileBox");
-    const roleBadge = document.getElementById("roleBadge");
+  const watchlistEl = document.getElementById("watchlist");
+  const marketListEl = document.getElementById("marketList");
+  const statusEl = document.getElementById("status");
+  const trackedCountEl = document.getElementById("trackedCount");
+  const lastUpdateEl = document.getElementById("lastUpdate");
+  const coinInput = document.getElementById("coinInput");
+  const addBtn = document.getElementById("addBtn");
+  const welcomeTitle = document.getElementById("welcomeTitle");
+  const profileBox = document.getElementById("profileBox");
+  const roleBadge = document.getElementById("roleBadge");
 
-    function setupTelegram() {
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
+  function setupTelegram() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
 
-        tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
+      tgUser = Telegram.WebApp.initDataUnsafe?.user || null;
 
-        if (tgUser?.first_name) {
-          welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
-        }
-
-        if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
-          isAdmin = true;
-        }
-
-        renderProfile();
-      } else {
-        renderProfile();
+      if (tgUser?.first_name && welcomeTitle) {
+        welcomeTitle.textContent = `Welcome, ${tgUser.first_name} 👋`;
       }
-    }
 
-    function renderProfile() {
+      if (tgUser?.id && ADMIN_IDS.includes(tgUser.id)) {
+        isAdmin = true;
+      }
+
+      renderProfile();
+    } else {
+      renderProfile();
+    }
+  }
+
+  function renderProfile() {
+    if (roleBadge) {
       roleBadge.textContent = isAdmin ? "ADMIN" : "USER";
-
-      if (!tgUser) {
-        profileBox.innerHTML = `<div class="empty">Open inside Telegram to see your profile.</div>`;
-        return;
-      }
-
-      profileBox.innerHTML = `
-        <p><strong>Name:</strong> ${escapeHtml((tgUser.first_name || "") + " " + (tgUser.last_name || ""))}</p>
-        <p><strong>Username:</strong> ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}</p>
-        <p><strong>Telegram ID:</strong> ${tgUser.id}</p>
-        <p><strong>Role:</strong> ${isAdmin ? "Admin" : "User"}</p>
-      `;
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    if (!profileBox) return;
+
+    if (!tgUser) {
+      profileBox.innerHTML = `<div class="empty">Open inside Telegram to see your profile.</div>`;
+      return;
     }
 
-    function saveSymbols() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+    const fullName = `${tgUser.first_name || ""} ${tgUser.last_name || ""}`.trim() || "Unknown";
+
+    profileBox.innerHTML = `
+      <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
+      <p><strong>Username:</strong> ${tgUser.username ? "@" + escapeHtml(tgUser.username) : "No username"}</p>
+      <p><strong>Telegram ID:</strong> ${tgUser.id}</p>
+      <p><strong>Role:</strong> ${isAdmin ? "Admin" : "User"}</p>
+    `;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function saveSymbols() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+  }
+
+  function normalizeSymbol(value) {
+    return value.trim().toUpperCase().replace("USDT", "");
+  }
+
+  function createSuggestionsBox() {
+    let box = document.getElementById("suggestionsBox");
+
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "suggestionsBox";
+      box.style.marginTop = "10px";
+      box.style.display = "none";
+      box.style.flexDirection = "column";
+      box.style.gap = "8px";
+
+      const searchSection = coinInput.parentElement.parentElement;
+      searchSection.appendChild(box);
     }
 
-    function normalizeSymbol(value) {
-      return value.trim().toUpperCase().replace("USDT", "");
+    return box;
+  }
+
+  function renderSuggestions(value) {
+    const box = createSuggestionsBox();
+    const query = normalizeSymbol(value);
+
+    if (!query) {
+      box.style.display = "none";
+      box.innerHTML = "";
+      selectedSuggestionIndex = -1;
+      return;
     }
 
-    async function fetchCoin(symbol) {
-      try {
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
+    const matches = SUGGESTION_SYMBOLS
+      .filter((symbol) => symbol.includes(query) && !symbols.includes(symbol))
+      .slice(0, 6);
 
-        return {
-          ok: true,
-          symbol,
-          price: Number(data.lastPrice),
-          change: Number(data.priceChangePercent)
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          symbol,
-          error: "Could not load price"
-        };
-      }
+    if (!matches.length) {
+      box.style.display = "none";
+      box.innerHTML = "";
+      selectedSuggestionIndex = -1;
+      return;
     }
 
-    function createCoinCard(item, allowRemove = false) {
-      if (!item.ok) {
-        return `
-          <div class="coin-card">
-            <div class="coin-top">
-              <div class="coin-left">
-                <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
-                <div class="coin-info">
-                  <h3>${item.symbol}</h3>
-                  <p>${item.error}</p>
-                </div>
-              </div>
-              ${allowRemove ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
-            </div>
-          </div>
-        `;
-      }
+    box.style.display = "flex";
+    box.innerHTML = matches.map((symbol, index) => `
+      <button
+        class="suggestion-item"
+        data-symbol="${symbol}"
+        style="
+          background: rgba(255,255,255,0.08);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px;
+          padding: 12px 14px;
+          text-align: left;
+          font-size: 14px;
+          cursor: pointer;
+        "
+      >
+        ${index === 0 ? "🔍 " : ""}${symbol}
+      </button>
+    `).join("");
 
-      const changeClass = item.change >= 0 ? "up" : "down";
-      const sign = item.change >= 0 ? "+" : "";
+    selectedSuggestionIndex = -1;
 
+    box.querySelectorAll(".suggestion-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        coinInput.value = item.dataset.symbol;
+        box.style.display = "none";
+        addCoin(item.dataset.symbol);
+      });
+    });
+  }
+
+  function moveSuggestionSelection(direction) {
+    const box = document.getElementById("suggestionsBox");
+    if (!box || box.style.display === "none") return;
+
+    const items = [...box.querySelectorAll(".suggestion-item")];
+    if (!items.length) return;
+
+    selectedSuggestionIndex += direction;
+
+    if (selectedSuggestionIndex < 0) {
+      selectedSuggestionIndex = items.length - 1;
+    }
+
+    if (selectedSuggestionIndex >= items.length) {
+      selectedSuggestionIndex = 0;
+    }
+
+    items.forEach((item, index) => {
+      item.style.background =
+        index === selectedSuggestionIndex
+          ? "rgba(59,130,246,0.25)"
+          : "rgba(255,255,255,0.08)";
+    });
+  }
+
+  function chooseSelectedSuggestion() {
+    const box = document.getElementById("suggestionsBox");
+    if (!box || box.style.display === "none") return false;
+
+    const items = [...box.querySelectorAll(".suggestion-item")];
+    if (!items.length) return false;
+
+    if (selectedSuggestionIndex >= 0 && items[selectedSuggestionIndex]) {
+      items[selectedSuggestionIndex].click();
+      return true;
+    }
+
+    return false;
+  }
+
+  async function fetchCoin(symbol) {
+    try {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`);
+      if (!res.ok) throw new Error("Not found");
+
+      const data = await res.json();
+
+      return {
+        ok: true,
+        symbol,
+        price: Number(data.lastPrice),
+        change: Number(data.priceChangePercent)
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        symbol,
+        error: "Could not load price"
+      };
+    }
+  }
+
+  function createCoinCard(item, allowRemove = false) {
+    if (!item.ok) {
       return `
         <div class="coin-card">
           <div class="coin-top">
@@ -630,127 +736,196 @@
               <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
               <div class="coin-info">
                 <h3>${item.symbol}</h3>
-                <p>${item.symbol}/USDT</p>
+                <p>${item.error}</p>
               </div>
             </div>
-            ${allowRemove && isAdmin ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
-          </div>
-          <div class="coin-bottom">
-            <div class="price">$${item.price.toLocaleString(undefined, {
-              minimumFractionDigits: item.price < 1 ? 4 : 2,
-              maximumFractionDigits: item.price < 1 ? 6 : 2
-            })}</div>
-            <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
+            ${allowRemove ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
           </div>
         </div>
       `;
     }
 
-    async function loadWatchlist() {
+    const changeClass = item.change >= 0 ? "up" : "down";
+    const sign = item.change >= 0 ? "+" : "";
+
+    return `
+      <div class="coin-card">
+        <div class="coin-top">
+          <div class="coin-left">
+            <div class="coin-icon">${item.symbol.slice(0, 3)}</div>
+            <div class="coin-info">
+              <h3>${item.symbol}</h3>
+              <p>${item.symbol}/USDT</p>
+            </div>
+          </div>
+          ${allowRemove ? `<button class="remove-btn" data-remove="${item.symbol}">Remove</button>` : ""}
+        </div>
+        <div class="coin-bottom">
+          <div class="price">$${item.price.toLocaleString(undefined, {
+            minimumFractionDigits: item.price < 1 ? 4 : 2,
+            maximumFractionDigits: item.price < 1 ? 6 : 2
+          })}</div>
+          <div class="change ${changeClass}">${sign}${item.change.toFixed(2)}%</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadWatchlist() {
+    if (statusEl) {
       statusEl.textContent = "Updating prices...";
-      const results = await Promise.all(symbols.map(fetchCoin));
+    }
 
+    const results = await Promise.all(symbols.map(fetchCoin));
+
+    if (trackedCountEl) {
       trackedCountEl.textContent = symbols.length;
+    }
 
+    if (watchlistEl) {
       if (!results.length) {
         watchlistEl.innerHTML = `<div class="empty">No coins in watchlist yet.</div>`;
       } else {
-        watchlistEl.innerHTML = results.map(item => createCoinCard(item, true)).join("");
+        watchlistEl.innerHTML = results.map((item) => createCoinCard(item, true)).join("");
       }
+    }
 
-      document.querySelectorAll(".remove-btn").forEach(btn => {
-        btn.addEventListener("click", () => removeCoin(btn.dataset.remove));
-      });
+    document.querySelectorAll(".remove-btn").forEach((btn) => {
+      btn.addEventListener("click", () => removeCoin(btn.dataset.remove));
+    });
 
-      const now = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
+    const now = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
 
+    if (statusEl) {
       statusEl.textContent = `Last refresh: ${now}`;
+    }
+
+    if (lastUpdateEl) {
       lastUpdateEl.textContent = now;
     }
+  }
 
-    async function loadMarket() {
-      const results = await Promise.all(MARKET_SYMBOLS.map(fetchCoin));
-      marketListEl.innerHTML = results.map(item => createCoinCard(item, false)).join("");
-    }
+  async function loadMarket() {
+    if (!marketListEl) return;
 
-    function addCoin(symbol) {
-      const clean = normalizeSymbol(symbol);
-      if (!clean) return;
+    const results = await Promise.all(MARKET_SYMBOLS.map(fetchCoin));
+    marketListEl.innerHTML = results.map((item) => createCoinCard(item, false)).join("");
+  }
 
-      if (!isAdmin) {
-        statusEl.textContent = "Only admin can add coins";
-        coinInput.value = "";
-        return;
-      }
+  function addCoin(symbol) {
+    const clean = normalizeSymbol(symbol);
+    if (!clean) return;
 
-      if (symbols.includes(clean)) {
-        statusEl.textContent = `${clean} already exists`;
-        coinInput.value = "";
-        return;
-      }
-
-      symbols.unshift(clean);
-      saveSymbols();
+    if (symbols.includes(clean)) {
+      if (statusEl) statusEl.textContent = `${clean} already exists`;
       coinInput.value = "";
+      return;
+    }
+
+    symbols.unshift(clean);
+    saveSymbols();
+    coinInput.value = "";
+
+    const box = document.getElementById("suggestionsBox");
+    if (box) {
+      box.style.display = "none";
+    }
+
+    loadWatchlist();
+  }
+
+  function removeCoin(symbol) {
+    symbols = symbols.filter((s) => s !== symbol);
+    saveSymbols();
+    loadWatchlist();
+  }
+
+  function startAutoRefresh() {
+    clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
       loadWatchlist();
-    }
+      loadMarket();
+    }, 2000);
+  }
 
-    function removeCoin(symbol) {
-      if (!isAdmin) {
-        statusEl.textContent = "Only admin can remove coins";
-        return;
-      }
+  function showPage(pageId) {
+    document.querySelectorAll(".page").forEach((page) => {
+      page.classList.remove("active");
+    });
 
-      symbols = symbols.filter(s => s !== symbol);
-      saveSymbols();
-      loadWatchlist();
-    }
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
 
-    function startAutoRefresh() {
-      clearInterval(refreshInterval);
-      refreshInterval = setInterval(() => {
-        loadWatchlist();
-        loadMarket();
-      }, 5000);
-    }
+    const page = document.getElementById(pageId);
+    const nav = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
 
-    function showPage(pageId) {
-      document.querySelectorAll(".page").forEach(page => {
-        page.classList.remove("active");
-      });
+    if (page) page.classList.add("active");
+    if (nav) nav.classList.add("active");
+  }
 
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.remove("active");
-      });
-
-      document.getElementById(pageId).classList.add("active");
-      document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add("active");
-    }
-
+  if (addBtn) {
     addBtn.addEventListener("click", () => addCoin(coinInput.value));
+  }
+
+  if (coinInput) {
+    coinInput.addEventListener("input", () => {
+      renderSuggestions(coinInput.value);
+    });
 
     coinInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addCoin(coinInput.value);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        moveSuggestionSelection(1);
+        return;
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        moveSuggestionSelection(-1);
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const usedSuggestion = chooseSelectedSuggestion();
+        if (!usedSuggestion) {
+          addCoin(coinInput.value);
+        }
+      }
     });
 
-    document.querySelectorAll(".chip").forEach(chip => {
-      chip.addEventListener("click", () => addCoin(chip.dataset.symbol));
+    coinInput.addEventListener("blur", () => {
+      setTimeout(() => {
+        const box = document.getElementById("suggestionsBox");
+        if (box) {
+          box.style.display = "none";
+        }
+      }, 150);
     });
+  }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        showPage(btn.dataset.page);
-      });
+  document.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      addCoin(chip.dataset.symbol);
     });
+  });
 
-    setupTelegram();
-    loadWatchlist();
-    loadMarket();
-    startAutoRefresh();
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      showPage(btn.dataset.page);
+    });
+  });
+
+  setupTelegram();
+  loadWatchlist();
+  loadMarket();
+  startAutoRefresh();
+</script>
   </script>
 </body>
 </html>
